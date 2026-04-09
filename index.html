@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TikTok Recharge Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; min-height: 100vh; margin: 0; }
+        .app-container { width: 100%; max-width: 400px; background-color: #ffffff; height: 100dvh; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.1); overflow: hidden; }
+        .scroll-content { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 20px; background-color: #f9fafb; }
+        .scroll-content::-webkit-scrollbar { display: none; }
+        .scroll-content { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .active-card { border: 2px solid #fe2c55 !important; background-color: #fff1f3 !important; }
+        
+        /* Modal Overlay */
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.6); }
+
+        /* Custom Radio Button cho bảng thanh toán */
+        .custom-radio { width: 22px; height: 22px; border-radius: 50%; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        input[type="radio"]:checked + .custom-radio { border-color: #FE2C55; }
+        input[type="radio"]:checked + .custom-radio::after { content: ''; width: 12px; height: 12px; background-color: #FE2C55; border-radius: 50%; }
+
+        /* Vòng xoay loading Tiktok */
+        .tiktok-loader { position: relative; width: 40px; height: 24px; margin-bottom: 1.5rem; }
+        .tk-dot-cyan, .tk-dot-red { position: absolute; width: 18px; height: 18px; border-radius: 50%; top: 50%; margin-top: -9px; mix-blend-mode: multiply; }
+        .tk-dot-cyan { background-color: #25F4EE; left: 0; animation: moveCyan 1s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        .tk-dot-red { background-color: #FE2C55; right: 0; animation: moveRed 1s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes moveCyan { 0%, 100% { transform: translate(0, 0) scale(1); z-index: 1; } 25% { transform: translate(11px, 0) scale(1.2); z-index: 2; } 50% { transform: translate(22px, 0) scale(1); z-index: 1; } 75% { transform: translate(11px, 0) scale(0.8); z-index: 0; } }
+        @keyframes moveRed { 0%, 100% { transform: translate(0, 0) scale(1); z-index: 2; } 25% { transform: translate(-11px, 0) scale(0.8); z-index: 0; } 50% { transform: translate(-22px, 0) scale(1); z-index: 1; } 75% { transform: translate(-11px, 0) scale(1.2); z-index: 2; } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <div id="main-screen" class="flex flex-col h-full w-full absolute inset-0 z-10 transition-transform duration-300">
+        
+        <div class="scroll-content">
+            <div class="bg-white p-4 flex items-center justify-between border-b sticky top-0 z-20">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chevron-left text-lg cursor-pointer"></i>
+                    <h1 class="text-xl font-bold">Get Coins</h1>
+                </div>
+                <div class="flex items-center gap-4 text-gray-600 text-lg">
+                    <i class="fa-solid fa-ellipsis cursor-pointer"></i>
+                    <i class="fa-solid fa-circle-question cursor-pointer"></i>
+                    <i class="fa-solid fa-right-from-bracket cursor-pointer"></i>
+                </div>
+            </div>
+
+            <div class="p-4 bg-white mb-2">
+                <div class="flex items-center gap-4 mb-5">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80" alt="User Avatar" class="w-16 h-16 rounded-full border-2 border-gray-100 object-cover">
+                    <div>
+                        <p class="text-2xl font-bold text-black mb-1">السيد توان</p>
+                        <div class="flex items-center gap-1.5">
+                            <svg class="w-4 h-4" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg>
+                            <span id="current-balance" class="font-bold text-sm text-gray-700">5,020,500</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative w-full">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400">
+                        <i class="fa-solid fa-user-circle text-lg"></i>
+                    </div>
+                    <input type="text" id="username" placeholder="Enter username" class="w-full pl-11 p-3 border rounded-lg bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#FE2C55] text-sm">
+                </div>
+            </div>
+
+            <div class="p-4 bg-white mb-2">
+                <div class="flex items-center gap-2 mb-4">
+                    <p class="text-xs text-[#FE2C55] font-medium">Save around 25% with a lower third-party service fee.</p>
+                    <i class="fa-solid fa-circle-question text-xs text-gray-400"></i>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3" id="coin-grid">
+                    <div class="coin-card bg-white border rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer active-card" onclick="selectCoin(this, '30', 0.31)">
+                        <div class="flex items-center gap-1 mb-1">
+                            <svg class="w-[18px] h-[18px]" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg>
+                            <span class="font-bold text-lg">30</span>
+                        </div>
+                        <p class="text-gray-500 text-xs">$0.31</p>
+                    </div>
+                    <div class="coin-card bg-white border rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer" onclick="selectCoin(this, '350', 3.65)">
+                        <div class="flex items-center gap-1 mb-1">
+                            <svg class="w-[18px] h-[18px]" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg>
+                            <span class="font-bold text-lg">350</span>
+                        </div>
+                        <p class="text-gray-500 text-xs">$3.65</p>
+                    </div>
+                    <div class="coin-card bg-white border rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer" onclick="selectCoin(this, '700', 7.25)">
+                        <div class="flex items-center gap-1 mb-1">
+                            <svg class="w-[18px] h-[18px]" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg>
+                            <span class="font-bold text-lg">700</span>
+                        </div>
+                        <p class="text-gray-500 text-xs">$7.25</p>
+                    </div>
+                    <div class="coin-card bg-white border rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer" onclick="selectCoin(this, '1400', 14.49)">
+                        <div class="flex items-center gap-1 mb-1">
+                            <svg class="w-[18px] h-[18px]" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg>
+                            <span class="font-bold text-lg">1,400</span>
+                        </div>
+                        <p class="text-gray-500 text-xs">$14.49</p>
+                    </div>
+                    <div class="coin-card bg-white border rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer" onclick="selectCoin(this, '3500', 36.2)">
+                        <div class="flex items-center gap-1 mb-1">
+                            <svg class="w-[18px] h-[18px]" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg>
+                            <span class="font-bold text-lg">3,500</span>
+                        </div>
+                        <p class="text-gray-500 text-xs">$36.2</p>
+                    </div>
+                    <div id="custom-card-btn" class="coin-card bg-white border rounded-xl p-3 flex flex-col items-center justify-center cursor-pointer" onclick="openCustomModal()">
+                        <span class="font-bold text-gray-700 text-[15px]">Custom</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-4 space-y-3">
+                <div class="bg-white p-4 rounded-xl flex items-center justify-between border shadow-sm cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-orange-100 p-2.5 rounded-lg text-orange-500"><i class="fa-solid fa-hands-clapping"></i></div>
+                        <div>
+                            <p class="font-bold text-sm">Invite & Get Rewards</p>
+                            <p class="text-xs text-gray-500">Check out this new feature!</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full bg-white border-t p-4 z-40 pb-6 shrink-0">
+            <div class="flex items-center justify-between mb-3 px-2 cursor-pointer">
+                <span class="text-[13px] text-gray-600 font-medium">Special offer</span>
+                <div class="flex items-center gap-1.5 text-[#FE2C55] text-xs font-semibold">
+                    <span>Unlock 5% cash back</span>
+                    <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-center gap-1.5 mb-3 text-2xl text-gray-700">
+                <i class="fa-brands fa-cc-visa text-blue-800"></i>
+                <i class="fa-brands fa-cc-mastercard text-red-600"></i>
+                <i class="fa-brands fa-cc-jcb text-green-600"></i>
+                <i class="fa-brands fa-cc-amex text-blue-500"></i>
+                <i class="fa-brands fa-cc-paypal text-blue-900"></i>
+            </div>
+
+            <button id="buy-btn" class="w-full bg-[#FE2C55] text-white py-3.5 rounded-[10px] font-bold text-lg active:opacity-80 transition-opacity flex items-center justify-center gap-2" onclick="goToSummary()">
+                Buy for $<span id="total-price">0.31</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="custom-modal" class="hidden fixed inset-0 modal-overlay z-50 flex-col justify-end transition-opacity">
+        <div class="bg-white w-full rounded-t-[20px] p-6 pb-8 transform transition-transform duration-300">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-[20px] font-bold text-black tracking-wide">Custom</h3>
+                <i onclick="closeCustomModal()" class="fa-solid fa-xmark text-xl text-gray-400 cursor-pointer p-1"></i>
+            </div>
+            
+            <div class="mb-8">
+                <p class="text-[13px] text-gray-500 mb-4 flex items-center gap-1">
+                    Number of Coins <i class="fa-regular fa-circle-question text-[11px]"></i>
+                </p>
+                <div class="relative border-b border-[#FE2C55] pb-2">
+                    <input type="number" id="custom-coins-input" placeholder="30 - 2,500,000" class="w-full text-xl font-bold text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent" oninput="calculateCustomPrice()">
+                    <div class="absolute right-0 top-1/2 -translate-y-1/2">
+                        <svg class="w-[18px] h-[18px]" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-6">
+                <span class="text-gray-400 text-[14px]">Total</span>
+                <span class="text-[22px] font-bold text-black" id="custom-price-display">$0.00</span>
+            </div>
+            
+            <button onclick="confirmCustom()" class="w-full bg-[#FE2C55] text-white py-3.5 rounded-[10px] font-bold text-[16px] hover:opacity-90">Confirm</button>
+        </div>
+    </div>
+
+    <div id="summary-screen" class="hidden absolute inset-0 bg-white z-20 flex flex-col w-full h-full">
+        <div class="px-5 py-4 flex items-center border-b border-gray-100">
+            <i onclick="closeSummary()" class="fa-solid fa-chevron-left text-xl cursor-pointer mr-4 text-black font-bold"></i>
+            <h1 class="text-xl font-bold text-black tracking-wide">Order summary</h1>
+        </div>
+        
+        <div class="px-5 pt-6 flex-grow overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-gray-500 text-base">Account</span>
+                <span class="font-bold text-black text-base" id="summary-account">@username</span>
+            </div>
+            <hr class="border-gray-100 mb-5">
+            <div class="flex justify-between items-center mb-8">
+                <span class="text-gray-500 text-base flex items-center gap-1" id="summary-coins-text">
+                    <svg class="w-4 h-4" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="24" cy="24" r="24" fill="#FFC107"/><circle cx="24" cy="24" r="18" fill="#FFCA28" stroke="#FFB300" stroke-width="2"/><path d="M24 14V28.5C24 31.5376 21.5376 34 18.5 34C15.4624 34 13 31.5376 13 28.5C13 25.4624 15.4624 23 18.5 23C19.0689 23 19.6174 23.0864 20.134 23.2454V18.1583C19.6108 18.0543 19.0635 18 18.5 18C12.701 18 8 22.701 8 28.5C8 34.299 12.701 39 18.5 39C24.299 39 29 34.299 29 28.5V20.5C31.5 22.5 35 23 38 23V18C35 18 31 16 29 14H24Z" fill="white"/></svg> 
+                    <span id="summary-coins-val">30</span> Coins
+                </span>
+                <span class="font-bold text-black text-[22px]" id="summary-total-price">$ 0.31</span>
+            </div>
+
+            <h3 class="font-bold text-black text-[15px] mb-4">Select a payment method</h3>
+
+            <div class="space-y-3">
+                <label class="flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-11 h-7 bg-[#1A1F71] text-white flex items-center justify-center rounded text-[11px] font-bold italic shadow-sm tracking-wide">VISA</div>
+                        <span class="text-black text-base">VISA **** 8888</span>
+                    </div>
+                    <input type="radio" name="payment_method" checked class="hidden">
+                    <div class="custom-radio bg-white"></div>
+                </label>
+
+                <label class="flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-11 flex items-center justify-center text-[22px] text-black"><i class="fa-brands fa-apple"></i><span class="text-[14px] font-bold ml-0.5">Pay</span></div>
+                        <span class="text-black text-base">Apple Pay</span>
+                    </div>
+                    <input type="radio" name="payment_method" class="hidden">
+                    <div class="custom-radio bg-white"></div>
+                </label>
+
+                <label class="flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-11 flex items-center justify-center text-[#003087] text-[22px] font-bold italic">P<span class="text-[#0079C1]">P</span></div>
+                        <span class="text-black text-base">PayPal</span>
+                    </div>
+                    <input type="radio" name="payment_method" class="hidden">
+                    <div class="custom-radio bg-white"></div>
+                </label>
+            </div>
+        </div>
+
+        <div class="w-full bg-white border-t border-gray-100 p-4 shrink-0">
+            <button onclick="startPaymentProcess()" class="w-full bg-[#FE2C55] text-white py-3.5 rounded-xl font-bold text-lg hover:opacity-90 transition-opacity">
+                Pay now
+            </button>
+        </div>
+    </div>
+
+    <div id="processing-screen" class="hidden absolute inset-0 bg-white z-40 flex flex-col items-center justify-center">
+        <div class="w-32 h-32 rounded-full flex items-center justify-center mb-8 relative">
+            <svg class="absolute inset-0 w-full h-full transform -rotate-90">
+                <circle cx="64" cy="64" r="60" stroke="#f3f4f6" stroke-width="6" fill="none"></circle>
+                <circle cx="64" cy="64" r="60" stroke="#FE2C55" stroke-width="6" fill="none" stroke-dasharray="377" stroke-dashoffset="0" id="progress-ring" style="transition: stroke-dashoffset 1s linear;"></circle>
+            </svg>
+            <span id="countdown-text" class="text-[34px] font-bold text-gray-800 tracking-wider">05:00</span>
+        </div>
+
+        <div class="tiktok-loader">
+            <div class="tk-dot-cyan"></div>
+            <div class="tk-dot-red"></div>
+        </div>
+        
+        <p id="processing-text" class="text-lg font-bold text-gray-900 tracking-wide mt-2">Processing your payment...</p>
+        <p class="text-[13px] text-gray-500 mt-1">Please do not close this page</p>
+    </div>
+
+    <div id="success-screen" class="hidden absolute inset-0 bg-white z-50 flex flex-col p-6 items-center justify-center">
+        <div class="w-[85px] h-[85px] bg-[#e6fcf0] text-[#20d571] rounded-full flex items-center justify-center mb-5">
+            <i class="fa-solid fa-check text-[45px]"></i>
+        </div>
+        
+        <h2 class="text-[26px] font-bold mb-4 text-black text-center tracking-tight">Successful recharge!</h2>
+        
+        <div class="text-[#666] text-[16px] text-center mb-8 leading-relaxed">
+            <span id="display-coins" class="text-black font-bold">30</span> Coins were sent to<br>
+            <span id="display-user" class="text-black font-bold">@username</span>.<br>
+            <span class="text-[#888] text-[14px] inline-block mt-0.5">This operation has been completed.</span>
+        </div>
+
+        <button onclick="returnToHome()" class="w-[95%] bg-[#FE2C55] text-white py-3.5 rounded-lg font-bold text-[16px] shadow-sm hover:opacity-90 transition-opacity mt-4">Go back</button>
+    </div>
+
+</div>
+
+<script>
+    let isCustom = false;
+    let currentBalance = 5020500; 
+    let selectedCoinsInt = 30; 
+    let selectedCoinsFormatted = "30";
+    let currentPrice = 0.31;
+    let countdownTimer;
+
+    // === CHỌN SỐ XU CÓ SẴN ===
+    function selectCoin(element, coins, price) {
+        isCustom = false;
+        selectedCoinsInt = parseInt(coins.replace(/,/g, ''));
+        selectedCoinsFormatted = selectedCoinsInt.toLocaleString('en-US');
+        currentPrice = price;
+
+        document.querySelectorAll('.coin-card').forEach(card => card.classList.remove('active-card'));
+        element.classList.add('active-card');
+        
+        updatePrice(price);
+    }
+
+    // === HIỆN BẢNG CUSTOM ===
+    function openCustomModal() {
+        document.getElementById('custom-modal').classList.remove('hidden');
+        document.getElementById('custom-modal').classList.add('flex');
+    }
+
+    // === ĐÓNG BẢNG CUSTOM ===
+    function closeCustomModal() {
+        document.getElementById('custom-modal').classList.add('hidden');
+        document.getElementById('custom-modal').classList.remove('flex');
+    }
+
+    // === TÍNH TOÁN TIỀN KHI NHẬP CUSTOM ===
+    function calculateCustomPrice() {
+        const coinInput = document.getElementById('custom-coins-input').value;
+        let coinAmount = parseInt(coinInput);
+        let displayPrice = "$0.00";
+        
+        if (!isNaN(coinAmount) && coinAmount >= 1) {
+            let calculatedPrice = coinAmount * 0.01034;
+            displayPrice = "$" + calculatedPrice.toFixed(2);
+        }
+        
+        document.getElementById('custom-price-display').innerText = displayPrice;
+    }
+
+    // === XÁC NHẬN CUSTOM ===
+    function confirmCustom() {
+        const coinInput = document.getElementById('custom-coins-input').value;
+        let coinAmount = parseInt(coinInput);
+        
+        if (isNaN(coinAmount) || coinAmount < 30) {
+            alert("Minimum 30 coins required!");
+            return;
+        }
+
+        isCustom = true;
+        selectedCoinsInt = coinAmount;
+        selectedCoinsFormatted = coinAmount.toLocaleString('en-US'); 
+        currentPrice = coinAmount * 0.01034;
+
+        // Cập nhật giao diện bên ngoài màn hình chính
+        document.querySelectorAll('.coin-card').forEach(card => card.classList.remove('active-card'));
+        document.getElementById('custom-card-btn').classList.add('active-card');
+        
+        updatePrice(currentPrice);
+        closeCustomModal(); // Đóng bảng pop-up
+    }
+
+    function updatePrice(price) {
+        document.getElementById('total-price').innerText = price.toFixed(2);
+    }
+
+    // ================== CÁC HÀM CHUYỂN TRANG ==================
+
+    function goToSummary() {
+        const username = document.getElementById('username').value.trim();
+        if (!username) {
+            alert("Please enter a username!");
+            document.getElementById('username').focus();
+            return;
+        }
+        if (selectedCoinsInt <= 0 || (isCustom && selectedCoinsInt < 30)) {
+            alert("Please select a coin package or enter an amount (Min 30)!");
+            return;
+        }
+        if (selectedCoinsInt > currentBalance) {
+            alert("Số dư xu không đủ!");
+            return;
+        }
+
+        document.getElementById('summary-account').innerText = username;
+        document.getElementById('summary-coins-val').innerText = selectedCoinsFormatted;
+        document.getElementById('summary-total-price').innerText = "$ " + currentPrice.toFixed(2);
+
+        document.getElementById('summary-screen').classList.remove('hidden');
+    }
+
+    function closeSummary() {
+        document.getElementById('summary-screen').classList.add('hidden');
+    }
+
+    function startPaymentProcess() {
+        document.getElementById('summary-screen').classList.add('hidden');
+        document.getElementById('processing-screen').classList.remove('hidden');
+        document.getElementById('processing-screen').classList.add('flex');
+        
+        // --- LOGIC ĐẾM NGƯỢC 5 PHÚT ---
+        let timeLeft = 300; 
+        const circleRing = document.getElementById('progress-ring');
+        const circumference = 377; 
+        
+        document.getElementById('countdown-text').innerText = "05:00";
+        if(circleRing) circleRing.style.strokeDashoffset = 0;
+
+        clearInterval(countdownTimer);
+        countdownTimer = setInterval(() => {
+            timeLeft--;
+            if (timeLeft < 0) timeLeft = 0;
+            
+            let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            let s = (timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('countdown-text').innerText = `${m}:${s}`;
+            
+            let offset = circumference - (timeLeft / 300) * circumference;
+            if (circleRing) circleRing.style.strokeDashoffset = offset;
+        }, 1000);
+
+        setTimeout(() => {
+            document.getElementById('processing-text').innerText = "Checking account security...";
+        }, 1500);
+
+        // Sau 4.5 giây hiển thị Thành Công
+        setTimeout(() => {
+            clearInterval(countdownTimer); 
+            
+            document.getElementById('processing-screen').classList.remove('flex');
+            document.getElementById('processing-screen').classList.add('hidden');
+            
+            const username = document.getElementById('username').value.trim();
+            document.getElementById('display-user').innerText = "@" + username;
+            document.getElementById('display-coins').innerText = selectedCoinsFormatted;
+            
+            document.getElementById('success-screen').classList.remove('hidden');
+            document.getElementById('success-screen').classList.add('flex');
+        }, 4500); 
+    }
+
+    function returnToHome() {
+        currentBalance -= selectedCoinsInt;
+        if (currentBalance < 0) currentBalance = 0;
+        
+        document.getElementById('current-balance').innerText = currentBalance.toLocaleString('en-US');
+        document.getElementById('username').value = "";
+        
+        const successScreen = document.getElementById('success-screen');
+        successScreen.classList.remove('flex');
+        successScreen.classList.add('hidden');
+        
+        document.getElementById('processing-text').innerText = "Processing your payment...";
+    }
+</script>
+</body>
+</html>
